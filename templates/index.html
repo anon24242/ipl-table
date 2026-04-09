@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL 2026 Points Table</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0e1a; }
+        .glow-line {
+            background: linear-gradient(90deg, transparent, #f59e0b, #ef4444, #f59e0b, transparent);
+            height: 2px;
+        }
+        .team-row {
+            transition: all 0.25s ease;
+            border-left: 3px solid transparent;
+        }
+        .team-row:hover {
+            background: rgba(255,255,255,0.06) !important;
+            transform: scale(1.005);
+            border-left-color: var(--team-color);
+        }
+        .nrr-pos { color: #34d399; font-weight: 600; }
+        .nrr-neg { color: #f87171; font-weight: 600; }
+        .pts-top { color: #fbbf24; font-weight: 800; font-size: 1.15rem; }
+        .pts-mid { color: #d1d5db; font-weight: 700; }
+        .pts-zero { color: #4b5563; font-weight: 600; }
+        .form-w { background: #059669; color: white; }
+        .form-l { background: #dc2626; color: white; }
+        .form-nr { background: #d97706; color: white; }
+        .pulse-dot {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px #22c55e; }
+            50% { opacity: 0.5; box-shadow: 0 0 12px #22c55e; }
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-row { animation: fade-in-up 0.4s ease forwards; opacity: 0; }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+        }
+        .logo-ring {
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .btn-action {
+            transition: all 0.2s;
+        }
+        .btn-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .trophy-bg {
+            background: radial-gradient(ellipse at top, rgba(251,191,36,0.15) 0%, transparent 60%);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+
+    <div class="trophy-bg">
+        <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+            <header class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 mb-4">
+                    <span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span>
+                    <span class="text-amber-300 text-sm font-medium">LIVE</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-black tracking-tight">
+                    <span class="text-white">IPL </span><span class="text-amber-400">2026</span>
+                </h1>
+                <p class="text-gray-400 mt-2 text-sm font-medium">Men's Points Table & Standings</p>
+                <p class="text-gray-600 mt-1 text-xs">Updated: {{ updated }}</p>
+            </header>
+
+            <div class="glow-line rounded-full mb-8"></div>
+
+            <div id="stats-bar" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"></div>
+
+            <div class="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/40">
+
+                <div class="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+                    <h2 class="text-sm font-bold text-gray-300 uppercase tracking-widest">Standings</h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="refreshData()" id="refresh-btn" class="btn-action flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
+                            <svg id="refresh-icon" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Refresh
+                        </button>
+                        <a href="/download/csv" class="btn-action bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-500/20">CSV</a>
+                        <a href="/download/json" class="btn-action bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-500/20">JSON</a>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-4 sm:px-6 py-3 text-left w-12">#</th>
+                                <th class="px-2 py-3 text-left">Team</th>
+                                <th class="px-2 py-3 text-center hidden sm:table-cell">M</th>
+                                <th class="px-2 py-3 text-center">W</th>
+                                <th class="px-2 py-3 text-center">L</th>
+                                <th class="px-2 py-3 text-center hidden md:table-cell">NR</th>
+                                <th class="px-2 py-3 text-center">NRR</th>
+                                <th class="px-2 py-3 text-center hidden lg:table-cell">For</th>
+                                <th class="px-2 py-3 text-center hidden lg:table-cell">Against</th>
+                                <th class="px-2 py-3 text-center text-xs">Pts</th>
+                                <th class="px-2 py-3 text-center hidden sm:table-cell">Form</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            {% for t in teams %}
+                            <tr class="team-row animate-row" style="--team-color: {{ t.color }}; animation-delay: {{ loop.index0 * 0.06 }}s; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="text-gray-500 font-bold text-base">{{ t.OrderNo }}</span>
+                                </td>
+                                <td class="px-2 py-3.5">
+                                    <div class="flex items-center gap-3">
+                                        {% if t.logo %}
+                                        <img src="{{ t.logo }}" alt="{{ t.TeamCode }}" class="w-8 h-8 rounded-full logo-ring object-contain bg-white/10 p-0.5 flex-shrink-0">
+                                        {% endif %}
+                                        <div>
+                                            <div class="font-bold text-white text-sm leading-tight">{{ t.TeamName }}</div>
+                                            <div class="text-[11px] font-semibold tracking-wider" style="color: {{ t.color }}">{{ t.TeamCode }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-2 py-3.5 text-center text-gray-400 hidden sm:table-cell">{{ t.Matches }}</td>
+                                <td class="px-2 py-3.5 text-center">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500/10 text-emerald-400 font-bold text-sm">{{ t.Wins }}</span>
+                                </td>
+                                <td class="px-2 py-3.5 text-center">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-red-500/10 text-red-400 font-bold text-sm">{{ t.Loss }}</span>
+                                </td>
+                                <td class="px-2 py-3.5 text-center text-gray-400 hidden md:table-cell">{{ t.NoResult }}</td>
+                                <td class="px-2 py-3.5 text-center">
+                                    <span class="font-mono {{ t.nrr_class }}">{{ t.nrr_display }}</span>
+                                </td>
+                                <td class="px-2 py-3.5 text-center text-gray-400 font-mono text-xs hidden lg:table-cell">{{ t.ForTeams }}</td>
+                                <td class="px-2 py-3.5 text-center text-gray-400 font-mono text-xs hidden lg:table-cell">{{ t.AgainstTeam }}</td>
+                                <td class="px-2 py-3.5 text-center {{ t.pts_class }}">{{ t.Points }}</td>
+                                <td class="px-2 py-3.5 hidden sm:table-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        {% for f in t.form_parsed %}
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold {{ f.cls }}">{{ f.label }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-4 sm:px-6 py-3 border-t border-white/10 bg-white/[0.02] flex items-center gap-4 text-[11px] text-gray-600">
+                    <span>M = Matches</span><span>W = Wins</span><span>L = Losses</span><span>NR = No Result</span><span>NRR = Net Run Rate</span>
+                </div>
+            </div>
+
+            <footer class="text-center mt-8 text-gray-700 text-xs">
+                Data sourced from <a href="https://www.iplt20.com/points-table/men" target="_blank" class="text-gray-500 hover:text-amber-400 transition">iplt20.com</a>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        function buildStats(teams) {
+            if (!teams || !teams.length) return;
+            const top = teams[0];
+            const bestNrr = [...teams].sort((a, b) => parseFloat(b.NetRunRate) - parseFloat(a.NetRunRate))[0];
+            const worstNrr = [...teams].sort((a, b) => parseFloat(a.NetRunRate) - parseFloat(b.NetRunRate))[0];
+            const totalMatches = teams.reduce((s, t) => s + parseInt(t.Matches), 0);
+
+            const stats = [
+                { label: "Leader", value: top.TeamCode, sub: `${top.Points} pts`, color: "text-amber-400" },
+                { label: "Best NRR", value: bestNrr.TeamCode, sub: bestNrr.NetRunRate, color: "text-emerald-400" },
+                { label: "Worst NRR", value: worstNrr.TeamCode, sub: worstNrr.NetRunRate, color: "text-red-400" },
+                { label: "Matches", value: totalMatches, sub: "played", color: "text-blue-400" },
+            ];
+
+            document.getElementById("stats-bar").innerHTML = stats.map(s => `
+                <div class="stat-card rounded-xl px-4 py-3 text-center">
+                    <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">${s.label}</div>
+                    <div class="text-lg font-black ${s.color} mt-0.5">${s.value}</div>
+                    <div class="text-[11px] text-gray-600">${s.sub}</div>
+                </div>
+            `).join("");
+        }
+
+        function refreshData() {
+            const icon = document.getElementById("refresh-icon");
+            icon.classList.add("animate-spin");
+            fetch("/api/refresh")
+                .then(r => r.json())
+                .then(data => {
+                    location.reload();
+                })
+                .finally(() => {
+                    setTimeout(() => icon.classList.remove("animate-spin"), 500);
+                });
+        }
+
+        buildStats({{ teams | tojson }});
+    </script>
+
+</body>
+</html>
